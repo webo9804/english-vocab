@@ -1,0 +1,1262 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="英文單字王">
+    <meta name="mobile-web-app-capable" content="yes">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>📚 英文單字王</title>
+    <style>
+        :root {
+            --bg-gradient: linear-gradient(135deg, #e0eafc 0%, #cfdef3 100%);
+            --card-bg: rgba(255, 255, 255, 0.95);
+            --text-main: #2c3e50;
+            --text-muted: #7f8c8d;
+            --primary: #3498db;
+            --primary-hover: #2980b9;
+            --secondary: #9b59b6;
+            --success: #2ecc71;
+            --danger: #e74c3c;
+            --warning: #f1c40f;
+            --border: #bdc3c7;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        [data-theme="dark"] {
+            --bg-gradient: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            --card-bg: rgba(30, 39, 73, 0.95);
+            --text-main: #f5f6fa;
+            --text-muted: #a4b0be;
+            --primary: #4a69bd;
+            --primary-hover: #1e3799;
+            --secondary: #8c7ae6;
+            --success: #2ed573;
+            --danger: #ff4757;
+            --warning: #ffa502;
+            --border: #2f3640;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            -webkit-tap-highlight-color: transparent;
+            touch-action: manipulation;
+        }
+
+        body {
+            padding-top: env(safe-area-inset-top);
+            padding-bottom: env(safe-area-inset-bottom);
+        }
+
+        body {
+            background: var(--bg-gradient);
+            color: var(--text-main);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        #app {
+            width: 100%;
+            max-width: 480px;
+            min-height: 100vh;
+            background: var(--card-bg);
+            box-shadow: var(--shadow);
+            position: relative;
+            overflow-x: hidden;
+            display: flex;
+            flex-direction: column;
+            transition: background 0.3s;
+        }
+
+        @media (min-width: 481px) {
+            #app {
+                min-height: 90vh;
+                border-radius: 20px;
+                margin: 20px 0;
+            }
+        }
+
+        /* Common Screen Styles */
+        .screen {
+            display: none;
+            flex-direction: column;
+            padding: 20px;
+            flex-grow: 1;
+            animation: fadeIn 0.3s ease-in;
+        }
+        .screen.active {
+            display: flex;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            position: relative;
+        }
+        h1 {
+            font-size: 24px;
+            text-align: center;
+            flex-grow: 1;
+        }
+        .theme-toggle {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            position: absolute;
+            right: 0;
+            top: 0;
+        }
+
+        button {
+            border: none;
+            border-radius: 12px;
+            padding: 16px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s, background 0.2s, box-shadow 0.2s;
+            color: white;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        button:active {
+            transform: scale(0.98);
+        }
+        button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .btn-primary { background: var(--primary); }
+        .btn-secondary { background: var(--secondary); }
+        .btn-success { background: var(--success); }
+        .btn-danger { background: var(--danger); }
+        .btn-outline {
+            background: transparent;
+            color: var(--text-main);
+            border: 2px solid var(--border);
+        }
+
+        /* Home Screen */
+        .home-stats {
+            background: rgba(0,0,0,0.05);
+            border-radius: 12px;
+            padding: 15px;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        .daily-progress-container {
+            margin-bottom: 10px;
+        }
+        .progress-bar-bg {
+            height: 10px;
+            background: var(--border);
+            border-radius: 5px;
+            overflow: hidden;
+            margin: 5px 0;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: var(--success);
+            width: 0%;
+            transition: width 0.3s;
+        }
+        .smart-review-badge {
+            background: var(--warning);
+            color: #000;
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            text-align: center;
+            font-weight: bold;
+            cursor: pointer;
+            animation: pulse 2s infinite;
+        }
+        .mode-toggle {
+            display: flex;
+            background: var(--border);
+            border-radius: 12px;
+            padding: 4px;
+            margin-bottom: 20px;
+        }
+        .mode-tab {
+            flex: 1;
+            padding: 10px;
+            text-align: center;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            color: var(--text-muted);
+            transition: 0.2s;
+        }
+        .mode-tab.active {
+            background: var(--card-bg);
+            color: var(--text-main);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .quiz-options {
+            display: grid;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .bottom-actions {
+            display: flex;
+            gap: 15px;
+            margin-top: auto;
+        }
+        .bottom-actions button {
+            flex: 1;
+        }
+
+        /* Quiz Screen */
+        .quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 10px;
+        }
+        .question-card {
+            background: rgba(0,0,0,0.03);
+            border-radius: 16px;
+            padding: 40px 20px;
+            text-align: center;
+            margin-bottom: 20px;
+            border: 2px solid var(--border);
+            position: relative;
+        }
+        .word-main {
+            font-size: 32px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .word-pos {
+            font-size: 16px;
+            color: var(--text-muted);
+            font-style: italic;
+        }
+        .options-grid {
+            display: grid;
+            gap: 12px;
+        }
+        .option-btn {
+            background: var(--card-bg);
+            color: var(--text-main);
+            border: 2px solid var(--border);
+            text-align: left;
+            padding: 15px 20px;
+            font-size: 16px;
+        }
+        .option-btn.correct {
+            background: var(--success);
+            color: white;
+            border-color: var(--success);
+        }
+        .option-btn.wrong {
+            background: var(--danger);
+            color: white;
+            border-color: var(--danger);
+        }
+        
+        .feedback-overlay {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0,0,0,0.8);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            text-align: center;
+            width: 90%;
+            z-index: 10;
+            display: none;
+        }
+        .feedback-overlay.show {
+            display: block;
+            animation: fadeIn 0.2s;
+        }
+
+        /* Lists */
+        .list-container {
+            flex-grow: 1;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            padding-right: 5px;
+        }
+        .list-item {
+            background: rgba(0,0,0,0.03);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 10px;
+        }
+        .list-item h4 {
+            margin-bottom: 5px;
+        }
+        .list-item p {
+            font-size: 14px;
+            color: var(--text-muted);
+            margin-bottom: 2px;
+        }
+        
+        /* Stats */
+        .stat-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+        .stat-box {
+            background: rgba(0,0,0,0.03);
+            padding: 15px;
+            border-radius: 12px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+        .stat-box .value {
+            font-size: 24px;
+            font-weight: bold;
+            color: var(--primary);
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-5px); }
+            75% { transform: translateX(5px); }
+        }
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+            100% { transform: scale(1); }
+        }
+        .anim-shake { animation: shake 0.4s; }
+        .anim-bounce { animation: bounce 0.4s; }
+
+        .hidden { display: none !important; }
+    </style>
+</head>
+<body>
+
+<div id="app">
+    <!-- Home Screen -->
+    <div id="screen-home" class="screen active">
+        <header>
+            <h1>📚 英文單字王</h1>
+            <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">🌙</button>
+        </header>
+
+        <div class="home-stats">
+            <div class="daily-progress-container">
+                <div style="display: flex; justify-content: space-between;">
+                    <span>今日進度: <span id="daily-count">0</span>/<span id="daily-goal-display">30</span> 題</span>
+                    <span>🔥 連續: <span id="daily-streak">0</span> 天</span>
+                </div>
+                <div class="progress-bar-bg">
+                    <div class="progress-bar-fill" id="daily-progress-fill"></div>
+                </div>
+            </div>
+            <div style="font-size: 14px; color: var(--text-muted);">總單字量: <span id="total-words-count"></span></div>
+        </div>
+
+        <div id="smart-review-btn" class="smart-review-badge hidden" onclick="startQuiz('review')">
+            🔔 今日建議複習: <span id="review-count">0</span> 個單字
+        </div>
+
+        <div class="mode-toggle">
+            <div class="mode-tab active" id="tab-en-zh" onclick="setMode('en-zh')">英 → 中</div>
+            <div class="mode-tab" id="tab-zh-en" onclick="setMode('zh-en')">中 → 英</div>
+        </div>
+
+        <div class="quiz-options">
+            <button class="btn-primary" onclick="startQuiz(10)">10題 🎯</button>
+            <button class="btn-primary" onclick="startQuiz(50)">50題 🔥</button>
+            <button class="btn-primary" onclick="startQuiz(100)">100題 👑</button>
+        </div>
+
+        <div class="bottom-actions">
+            <button class="btn-outline" onclick="showScreen('screen-wrong')">錯題本 📖</button>
+            <button class="btn-outline" onclick="showScreen('screen-stats')">學習統計 📊</button>
+        </div>
+    </div>
+
+    <!-- Quiz Screen -->
+    <div id="screen-quiz" class="screen">
+        <div class="quiz-header">
+            <span id="quiz-counter">1/10</span>
+            <span id="quiz-timer">00:00</span>
+            <span id="quiz-streak">🔥 0</span>
+        </div>
+        <div class="progress-bar-bg">
+            <div class="progress-bar-fill" id="quiz-progress-fill" style="width: 0%;"></div>
+        </div>
+
+        <div class="question-card" id="question-card">
+            <div class="word-main" id="q-word">Word</div>
+            <div class="word-pos" id="q-pos">(pos)</div>
+            
+            <div class="feedback-overlay" id="feedback-overlay">
+                <div>❌ 你選的：<span id="fb-picked"></span></div>
+                <div style="margin-top: 10px; color: var(--success);">✅ 正確答案：<span id="fb-correct"></span></div>
+            </div>
+        </div>
+
+        <div class="options-grid" id="options-container">
+            <!-- Options generated by JS -->
+        </div>
+        
+        <button class="btn-danger" style="margin-top: 20px;" onclick="abortQuiz()">放棄測驗</button>
+    </div>
+
+    <!-- Result Screen -->
+    <div id="screen-result" class="screen">
+        <h2 style="text-align: center; margin-bottom: 20px;">測驗結果 🏆</h2>
+        
+        <div class="stat-grid">
+            <div class="stat-box">
+                <div>分數</div>
+                <div class="value" id="res-score">0</div>
+            </div>
+            <div class="stat-box">
+                <div>答對率</div>
+                <div class="value" id="res-accuracy">0%</div>
+            </div>
+            <div class="stat-box">
+                <div>時間</div>
+                <div class="value" id="res-time">00:00</div>
+            </div>
+            <div class="stat-box">
+                <div>最高連對</div>
+                <div class="value" id="res-streak">0</div>
+            </div>
+        </div>
+
+        <h3 style="margin: 10px 0;">錯題回顧 (<span id="res-wrong-count">0</span>)</h3>
+        <div class="list-container" id="res-wrong-list">
+            <!-- Wrong answers from this quiz -->
+        </div>
+
+        <div class="bottom-actions">
+            <button class="btn-secondary" id="btn-requiz-wrong" onclick="startQuiz('wrong-current')">錯題再測</button>
+            <button class="btn-primary" onclick="showScreen('screen-home')">回首頁</button>
+        </div>
+    </div>
+
+    <!-- Wrong Answer Review Screen -->
+    <div id="screen-wrong" class="screen">
+        <h2 style="text-align: center; margin-bottom: 20px;">錯題本 📖</h2>
+        <div style="margin-bottom: 10px; text-align: center; color: var(--text-muted);">
+            累積錯題數: <span id="total-wrong-count">0</span>
+        </div>
+        
+        <div class="list-container" id="all-wrong-list">
+            <!-- All wrong answers -->
+        </div>
+
+        <div class="bottom-actions" style="margin-bottom: 10px;">
+            <button class="btn-secondary" onclick="startQuiz('wrong-all')">複習全部錯題</button>
+        </div>
+        <div class="bottom-actions">
+            <button class="btn-outline" onclick="clearWrongAnswers()">清除紀錄</button>
+            <button class="btn-primary" onclick="showScreen('screen-home')">回首頁</button>
+        </div>
+    </div>
+
+    <!-- Statistics Screen -->
+    <div id="screen-stats" class="screen">
+        <h2 style="text-align: center; margin-bottom: 20px;">學習統計 📊</h2>
+        
+        <div class="list-container">
+            <div class="list-item">
+                <h4>總體進度</h4>
+                <p>總測驗次數: <span id="stat-total-quizzes">0</span></p>
+                <p>總答對題數: <span id="stat-total-correct">0</span></p>
+                <p>總答錯題數: <span id="stat-total-wrong">0</span></p>
+                <p>歷史最高連對: <span id="stat-best-streak">0</span></p>
+            </div>
+            
+            <div class="list-item">
+                <h4>每日目標設定</h4>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <input type="number" id="input-daily-goal" value="30" style="width: 80px; padding: 5px; border-radius: 5px; border: 1px solid var(--border);">
+                    <button class="btn-primary" style="padding: 5px 15px;" onclick="saveDailyGoal()">儲存</button>
+                </div>
+            </div>
+
+            <div class="list-item">
+                <h4>資料備份 / 還原</h4>
+                <div style="display: flex; gap: 10px; margin-top: 10px;">
+                    <button class="btn-outline" style="flex: 1; padding: 10px;" onclick="exportData()">匯出資料 💾</button>
+                    <label class="btn-outline" style="flex: 1; padding: 10px; text-align: center; cursor: pointer;">
+                        匯入資料 📂
+                        <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
+                    </label>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn-primary" style="width: 100%;" onclick="showScreen('screen-home')">回首頁</button>
+    </div>
+</div>
+
+<script>
+// ==========================================
+// 1. DATA (WORD BANK)
+// ==========================================
+const wordBank = [
+    // ----- 詞彙題 1-10 -----
+    {en: 'refer', zh: '參考；提及；指的是', pos: 'v.'},
+    {en: 'prefer', zh: '偏好、更喜歡', pos: 'v.'},
+    {en: 'differ', zh: '不同、相異', pos: 'v.'},
+    {en: 'transfer', zh: '轉移；調動；傳輸', pos: 'v.'},
+    {en: 'formal', zh: '正式的；形式上的', pos: 'adj.'},
+    {en: 'naked', zh: '裸體的；無遮蔽的', pos: 'adj.'},
+    {en: 'minor', zh: '次要的；較小的；輕微的', pos: 'adj.'},
+    {en: 'cruel', zh: '殘忍的、殘酷的', pos: 'adj.'},
+    {en: 'function', zh: '功能；運作、起作用', pos: 'n./v.'},
+    {en: 'absence', zh: '缺席；缺乏、不存在', pos: 'n.'},
+    {en: 'package', zh: '包裹；包裝', pos: 'n./v.'},
+    {en: 'principle', zh: '原則、準則；原理', pos: 'n.'},
+    {en: 'particularly', zh: '特別是、尤其是', pos: 'adv.'},
+    {en: 'painfully', zh: '痛苦地；極其、令人不快地', pos: 'adv.'},
+    {en: 'instantly', zh: '立即地、馬上', pos: 'adv.'},
+    {en: 'primarily', zh: '主要地、首要地', pos: 'adv.'},
+    {en: 'confirm', zh: '確認、證實', pos: 'v.'},
+    {en: 'perform', zh: '執行；表演、演出', pos: 'v.'},
+    {en: 'compare', zh: '比較、對照', pos: 'v.'},
+    {en: 'admire', zh: '欽佩、讚賞、仰慕', pos: 'v.'},
+    {en: 'branch', zh: '樹枝；分行、分局；分支', pos: 'n.'},
+    {en: 'puzzle', zh: '謎團、難題；使困惑', pos: 'n./v.'},
+    {en: 'region', zh: '地區、區域', pos: 'n.'},
+    {en: 'melody', zh: '旋律、曲調', pos: 'n.'},
+    {en: 'measure', zh: '測量；措施、手段', pos: 'v./n.'},
+    {en: 'approach', zh: '接近、靠近；方法、途徑', pos: 'v./n.'},
+    {en: 'tighten', zh: '勒緊、變緊；加強', pos: 'v.'},
+    {en: 'destroy', zh: '破壞、毀滅', pos: 'v.'},
+    {en: 'similar', zh: '相似的、雷同的', pos: 'adj.'},
+    {en: 'conscious', zh: '有意識的；察覺到的', pos: 'adj.'},
+    {en: 'various', zh: '各種不同的、各式各樣的', pos: 'adj.'},
+    {en: 'sensitive', zh: '敏感的；體貼易受傷的', pos: 'adj.'},
+    {en: 'organize', zh: '組織、籌劃、安排', pos: 'v.'},
+    {en: 'summarize', zh: '總結、概述', pos: 'v.'},
+    {en: 'recognize', zh: '認出、辨識；承認', pos: 'v.'},
+    {en: 'dramatize', zh: '戲劇化、誇張化；改編為劇本', pos: 'v.'},
+    {en: 'budget', zh: '預算；編列預算', pos: 'n./v.'},
+    {en: 'account', zh: '帳戶；敘述；說明', pos: 'n./v.'},
+    {en: 'treasure', zh: '珍寶；珍藏、珍惜', pos: 'n./v.'},
+    {en: 'harvest', zh: '收穫、收成；收割', pos: 'n./v.'},
+    // ----- 綜合測驗 11-15 -----
+    {en: 'disease', zh: '疾病', pos: 'n.'},
+    {en: 'signal', zh: '信號、暗號；發信號', pos: 'n./v.'},
+    {en: 'up to', zh: '高達、多達；取決於', pos: 'phrase'},
+    {en: 'due to', zh: '由於、因為', pos: 'phrase'},
+    {en: 'as to', zh: '至於、關於', pos: 'phrase'},
+    {en: 'reliable', zh: '可靠的、值得信賴的', pos: 'adj.'},
+    {en: 'undesirable', zh: '令人不快的、討厭的、不受歡迎的', pos: 'adj.'},
+    {en: 'normal', zh: '正常的、標準的', pos: 'adj.'},
+    {en: 'casual', zh: '隨意的；非正式的；偶然的', pos: 'adj.'},
+    {en: 'promising', zh: '有前途的、大有可為的', pos: 'adj.'},
+    {en: 'demanding', zh: '要求苛刻的、費時費力的', pos: 'adj.'},
+    {en: 'damaging', zh: '有害的、具破壞性的', pos: 'adj.'},
+    // ----- 綜合測驗 16-20 (片語) -----
+    {en: 'come to fame', zh: '成名、聲名大噪', pos: 'phrase'},
+    {en: 'come to an end', zh: '結束、告終', pos: 'phrase'},
+    {en: 'come to life', zh: '甦醒；活躍起來；栩栩如生', pos: 'phrase'},
+    {en: 'come to mind', zh: '浮現在腦海中、被想起', pos: 'phrase'},
+    {en: 'asleep', zh: '睡著的', pos: 'adj.'},
+    {en: 'alive', zh: '活著的、有生氣的', pos: 'adj.'},
+    {en: 'apart', zh: '分開地、相隔地', pos: 'adv.'},
+    {en: 'alone', zh: '單獨的、獨自的', pos: 'adj./adv.'},
+    {en: 'based on', zh: '根據...、以...為基礎', pos: 'phrase'},
+    {en: 'known for', zh: '以...聞名', pos: 'phrase'},
+    {en: 'confined to', zh: '被限制在...、侷限於...', pos: 'phrase'},
+    {en: 'located in', zh: '座落於...、位於...', pos: 'phrase'},
+    {en: 'in other words', zh: '換句話說', pos: 'phrase'},
+    {en: 'on the other hand', zh: '另一方面', pos: 'phrase'},
+    {en: 'for instance', zh: '例如', pos: 'phrase'},
+    {en: 'as a result', zh: '結果、因此', pos: 'phrase'},
+    // ----- 文意選填 (瀑布篇) -----
+    {en: 'made up of', zh: '由...組成', pos: 'phrase'},
+    {en: 'rare', zh: '罕見的、稀有的', pos: 'adj.'},
+    {en: 'lift', zh: '舉起、抬起；解除', pos: 'v./n.'},
+    {en: 'install', zh: '安裝、設置', pos: 'v.'},
+    {en: 'engineer', zh: '工程師；策劃、設計', pos: 'n./v.'},
+    {en: 'shut down', zh: '停工、關閉', pos: 'phrase'},
+    {en: 'dry', zh: '乾涸的；使變乾', pos: 'adj./v.'},
+    {en: 'for sure', zh: '確定地、毫無疑問地', pos: 'phrase'},
+    {en: 'magnificent', zh: '壯麗的、宏偉的', pos: 'adj.'},
+    {en: 'desperate', zh: '絕望的、拼命的、鋌而走險的', pos: 'adj.'},
+    // ----- 詞彙題(二) 1-10 -----
+    {en: 'plentiful', zh: '豐富的、充足的', pos: 'adj.'},
+    {en: 'seasonal', zh: '季節性的', pos: 'adj.'},
+    {en: 'deficient', zh: '缺乏的、不足的；有缺陷的', pos: 'adj.'},
+    {en: 'scarce', zh: '稀少的、短缺的', pos: 'adj.'},
+    {en: 'dedicate', zh: '奉獻、致力於', pos: 'v.'},
+    {en: 'identify', zh: '辨認、識別；認同', pos: 'v.'},
+    {en: 'introduce', zh: '介紹；引進', pos: 'v.'},
+    {en: 'sacrifice', zh: '犧牲、捨棄；祭品', pos: 'v./n.'},
+    {en: 'astonishingly', zh: '驚人地、令人驚訝地', pos: 'adv.'},
+    {en: 'precisely', zh: '精確地、準確地', pos: 'adv.'},
+    {en: 'efficiently', zh: '有效率地', pos: 'adv.'},
+    {en: 'extremely', zh: '極度地、非常', pos: 'adv.'},
+    {en: 'regret', zh: '後悔、遺憾', pos: 'v./n.'},
+    {en: 'heal', zh: '治癒、癒合', pos: 'v.'},
+    {en: 'rebel', zh: '反抗、反叛；叛逆者', pos: 'v./n.'},
+    {en: 'ponder', zh: '深思、仔細考慮', pos: 'v.'},
+    {en: 'recruit', zh: '招募、招收；新兵、新成員', pos: 'v./n.'},
+    {en: 'paralyze', zh: '使癱瘓、使麻痺；使無法運作', pos: 'v.'},
+    {en: 'promote', zh: '促進；提拔、升遷；促銷', pos: 'v.'},
+    {en: 'minimize', zh: '使減到最少、降到最低', pos: 'v.'},
+    {en: 'purchase', zh: '購買、採購；購買物', pos: 'v./n.'},
+    {en: 'demand', zh: '要求、需求', pos: 'n./v.'},
+    {en: 'concept', zh: '概念、觀念', pos: 'n.'},
+    {en: 'tradition', zh: '傳統、常規', pos: 'n.'},
+    {en: 'legendary', zh: '傳奇的、家喻戶曉的', pos: 'adj.'},
+    {en: 'dependent', zh: '依賴的、依靠的', pos: 'adj.'},
+    {en: 'deceivable', zh: '易受騙的', pos: 'adj.'},
+    {en: 'insensitive', zh: '遲鈍的、不敏感的；不體貼的', pos: 'adj.'},
+    {en: 'unique', zh: '獨特的、獨一無二的', pos: 'adj.'},
+    {en: 'confident', zh: '有信心的、自信的', pos: 'adj.'},
+    {en: 'irrelevant', zh: '不相關的、無關緊要的', pos: 'adj.'},
+    {en: 'expression', zh: '表達；表情；詞句', pos: 'n.'},
+    {en: 'compliment', zh: '讚美、恭維', pos: 'n./v.'},
+    {en: 'procedure', zh: '程序、手續、步驟', pos: 'n.'},
+    {en: 'quality', zh: '特質、特性；品質', pos: 'n.'},
+    {en: 'connective', zh: '連接的、起連接作用的', pos: 'adj.'},
+    {en: 'accessible', zh: '可使用的、易取得的、可接近的', pos: 'adj.'},
+    {en: 'particular', zh: '特定的；講究的、挑剔的', pos: 'adj.'},
+    // ----- 綜合測驗(二) 12-15 -----
+    {en: 'appreciative', zh: '感激的、讚賞的', pos: 'adj.'},
+    {en: 'expressive', zh: '表現力豐富的、意味深長的', pos: 'adj.'},
+    {en: 'abusive', zh: '辱罵的、虐待的；濫用的', pos: 'adj.'},
+    {en: 'compliant', zh: '順從的、服從的、合規的', pos: 'adj.'},
+    {en: 'nonetheless', zh: '儘管如此、然而', pos: 'adv.'},
+    {en: 'furthermore', zh: '此外、而且', pos: 'adv.'},
+    {en: 'therefore', zh: '因此、所以', pos: 'adv.'},
+    {en: 'notwithstanding', zh: '儘管、雖然', pos: 'prep./adv.'},
+    {en: 'leave', zh: '使處於...狀態；留下', pos: 'v.'},
+    {en: 'consistently', zh: '一貫地、始終如一地', pos: 'adv.'},
+    {en: 'destructively', zh: '毀滅性地、破壞性地', pos: 'adv.'},
+    {en: 'constructively', zh: '建設性地', pos: 'adv.'},
+    {en: 'implicitly', zh: '含蓄地、暗示地；暗中', pos: 'adv.'},
+    // ----- 文意選填 (馬拉拉篇) -----
+    {en: 'telling', zh: '發人深省的；顯著的', pos: 'adj.'},
+    {en: 'equipped', zh: '裝備齊全的、具備條件的', pos: 'adj.'},
+    {en: 'counterpart', zh: '相對應的人或事物；同行', pos: 'n.'},
+    {en: 'suggest', zh: '建議；提議；暗示', pos: 'v.'},
+    {en: 'addict', zh: '成癮者；使沉迷、使上癮', pos: 'n./v.'},
+    {en: 'encounter', zh: '遭遇、巧遇、面臨', pos: 'v./n.'}
+];
+
+// ==========================================
+// 2. STATE & STORAGE
+// ==========================================
+let state = {
+    mode: 'en-zh', // 'en-zh' or 'zh-en'
+    wrongAnswers: {}, // key: en word, value: wrong count
+    stats: {
+        totalQuizzes: 0,
+        totalCorrect: 0,
+        totalWrong: 0,
+        bestStreak: 0,
+        bestScores: {}
+    },
+    mastery: {}, // key: en word, value: {level, correctStreak, lastCorrect}
+    daily: {
+        dailyGoal: 30,
+        todayDate: '',
+        todayCount: 0,
+        streakDays: 0,
+        lastActiveDate: ''
+    }
+};
+
+let currentQuiz = {
+    questions: [],
+    currentIndex: 0,
+    score: 0,
+    correct: 0,
+    wrong: 0,
+    streak: 0,
+    maxStreak: 0,
+    startTime: 0,
+    timerInterval: null,
+    wrongList: [] // items missed in THIS quiz
+};
+
+// ==========================================
+// 3. STORAGE FUNCTIONS
+// ==========================================
+function loadData() {
+    const wrong = localStorage.getItem('vocab_wrong_answers');
+    if (wrong) state.wrongAnswers = JSON.parse(wrong);
+
+    const stats = localStorage.getItem('vocab_stats');
+    if (stats) state.stats = JSON.parse(stats);
+
+    const mastery = localStorage.getItem('vocab_mastery');
+    if (mastery) state.mastery = JSON.parse(mastery);
+
+    const daily = localStorage.getItem('vocab_daily');
+    if (daily) {
+        state.daily = JSON.parse(daily);
+    } else {
+        state.daily.dailyGoal = 30;
+    }
+    
+    // Check daily goal reset
+    const today = new Date().toISOString().split('T')[0];
+    if (state.daily.todayDate !== today) {
+        if (state.daily.todayDate) {
+            // Check if streak is maintained (was active yesterday)
+            const yesterday = new Date();
+            yesterday.setDate(yesterday.getDate() - 1);
+            const yesterdayStr = yesterday.toISOString().split('T')[0];
+            
+            if (state.daily.lastActiveDate !== yesterdayStr && state.daily.todayCount < state.daily.dailyGoal) {
+                // Streak broken
+                state.daily.streakDays = 0;
+            } else if (state.daily.todayCount >= state.daily.dailyGoal) {
+                // Met goal yesterday
+                state.daily.lastActiveDate = state.daily.todayDate;
+            }
+        }
+        state.daily.todayDate = today;
+        state.daily.todayCount = 0;
+        saveData();
+    }
+
+    const dark = localStorage.getItem('vocab_dark_mode');
+    if (dark === 'true') {
+        document.body.setAttribute('data-theme', 'dark');
+        document.getElementById('theme-btn').innerText = '☀️';
+    }
+}
+
+function saveData() {
+    localStorage.setItem('vocab_wrong_answers', JSON.stringify(state.wrongAnswers));
+    localStorage.setItem('vocab_stats', JSON.stringify(state.stats));
+    localStorage.setItem('vocab_mastery', JSON.stringify(state.mastery));
+    localStorage.setItem('vocab_daily', JSON.stringify(state.daily));
+}
+
+function toggleTheme() {
+    const isDark = document.body.hasAttribute('data-theme');
+    if (isDark) {
+        document.body.removeAttribute('data-theme');
+        document.getElementById('theme-btn').innerText = '🌙';
+        localStorage.setItem('vocab_dark_mode', 'false');
+    } else {
+        document.body.setAttribute('data-theme', 'dark');
+        document.getElementById('theme-btn').innerText = '☀️';
+        localStorage.setItem('vocab_dark_mode', 'true');
+    }
+}
+
+// ==========================================
+// 4. UTILS & LOGIC
+// ==========================================
+function shuffle(array) {
+    let arr = [...array];
+    for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+}
+
+// Spaced Repetition logic (含抗堰塞湖分流：每次最多 15 題，優先挑最該背的)
+function getWordsDueForReview() {
+    const now = new Date();
+    let dueList = wordBank.filter(word => {
+        const m = state.mastery[word.en];
+        // 如果連碰都沒碰過，就不算在「複習」名單內
+        if (!m) return false; 
+        
+        // 如果答錯被降回 0 級，表示需要立刻再測
+        if (m.level === 0) return true;
+        
+        const last = new Date(m.lastCorrect);
+        const daysDiff = (now - last) / (1000 * 60 * 60 * 24);
+        
+        if (m.level === 1 && daysDiff >= 1) return true;
+        if (m.level === 2 && daysDiff >= 3) return true;
+        if (m.level >= 3 && daysDiff >= 7) return true;
+        return false;
+    });
+
+    // 排序：先排錯題(Level 0)、再排錯次數多的、再排過期最久的
+    dueList.sort((a, b) => {
+        const ma = state.mastery[a.en] || { level: 0, lastCorrect: 0 };
+        const mb = state.mastery[b.en] || { level: 0, lastCorrect: 0 };
+        const wa = state.wrongAnswers[a.en] || 0;
+        const wb = state.wrongAnswers[b.en] || 0;
+
+        // Level 0 最優先
+        if (ma.level === 0 && mb.level !== 0) return -1;
+        if (mb.level === 0 && ma.level !== 0) return 1;
+
+        // 錯越多次越優先
+        if (wa !== wb) return wb - wa;
+
+        // 最後依過期時間（時間越早越優先）
+        return new Date(ma.lastCorrect) - new Date(mb.lastCorrect);
+    });
+
+    // 手機版防暴量：一次最多抽 15 題，分批消化無壓力
+    return dueList.slice(0, 15);
+}
+
+function updateMastery(en, isCorrect) {
+    if (!state.mastery[en]) {
+        state.mastery[en] = { level: 0, correctStreak: 0, lastCorrect: null };
+    }
+    const m = state.mastery[en];
+    
+    if (isCorrect) {
+        m.correctStreak++;
+        if (m.correctStreak === 1) m.level = 1;
+        else if (m.correctStreak === 2) m.level = 2;
+        else if (m.correctStreak >= 3) m.level = 3;
+        m.lastCorrect = new Date().toISOString();
+    } else {
+        m.level = 0;
+        m.correctStreak = 0;
+    }
+}
+
+// Weighted sampling without replacement
+function getWeightedSample(pool, count) {
+    let available = [...pool];
+    let selected = [];
+    
+    for (let i = 0; i < count; i++) {
+        if (available.length === 0) break;
+        
+        let totalWeight = 0;
+        let weights = available.map(w => {
+            let wc = state.wrongAnswers[w.en] || 0;
+            let weight = 1 + (wc > 0 ? Math.pow(wc, 1.5) : 0);
+            totalWeight += weight;
+            return weight;
+        });
+        
+        let r = Math.random() * totalWeight;
+        let sum = 0;
+        for (let j = 0; j < available.length; j++) {
+            sum += weights[j];
+            if (r <= sum) {
+                selected.push(available[j]);
+                available.splice(j, 1);
+                break;
+            }
+        }
+    }
+    return selected;
+}
+
+function setMode(mode) {
+    state.mode = mode;
+    document.getElementById('tab-en-zh').classList.toggle('active', mode === 'en-zh');
+    document.getElementById('tab-zh-en').classList.toggle('active', mode === 'zh-en');
+}
+
+// ==========================================
+// 5. UI FLOW
+// ==========================================
+function showScreen(screenId) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById(screenId).classList.add('active');
+    
+    if (screenId === 'screen-home') initHome();
+    if (screenId === 'screen-wrong') initWrong();
+    if (screenId === 'screen-stats') initStats();
+}
+
+function initHome() {
+    document.getElementById('total-words-count').innerText = wordBank.length;
+    
+    // Daily
+    document.getElementById('daily-count').innerText = state.daily.todayCount;
+    document.getElementById('daily-goal-display').innerText = state.daily.dailyGoal;
+    document.getElementById('daily-streak').innerText = state.daily.streakDays;
+    
+    let pct = Math.min(100, (state.daily.todayCount / state.daily.dailyGoal) * 100);
+    document.getElementById('daily-progress-fill').style.width = pct + '%';
+    
+    // Smart review
+    const due = getWordsDueForReview();
+    if (due.length > 0) {
+        document.getElementById('smart-review-btn').classList.remove('hidden');
+        document.getElementById('review-count').innerText = due.length;
+    } else {
+        document.getElementById('smart-review-btn').classList.add('hidden');
+    }
+}
+
+// ==========================================
+// 6. QUIZ LOGIC
+// ==========================================
+function startQuiz(type) {
+    let pool = [];
+    let count = 0;
+
+    if (type === 'review') {
+        pool = getWordsDueForReview();
+        count = pool.length;
+    } else if (type === 'wrong-current') {
+        pool = currentQuiz.wrongList.map(w => wordBank.find(x => x.en === w.en));
+        count = pool.length;
+    } else if (type === 'wrong-all') {
+        pool = wordBank.filter(w => state.wrongAnswers[w.en] > 0);
+        count = pool.length;
+    } else {
+        pool = [...wordBank];
+        count = parseInt(type);
+    }
+
+    if (pool.length === 0) {
+        alert("沒有題目可以測驗！");
+        return;
+    }
+
+    if (count > pool.length) count = pool.length;
+
+    let selectedWords = type === 'review' || String(type).startsWith('wrong') 
+        ? shuffle(pool).slice(0, count) 
+        : getWeightedSample(pool, count);
+
+    // Prepare questions
+    currentQuiz = {
+        questions: selectedWords.map(w => {
+            // Generate 3 wrong options
+            let others = wordBank.filter(x => x.en !== w.en);
+            let wrongOpts = shuffle(others).slice(0, 3);
+            let options = shuffle([w, ...wrongOpts]);
+            return { word: w, options: options };
+        }),
+        currentIndex: 0,
+        score: 0,
+        correct: 0,
+        wrong: 0,
+        streak: 0,
+        maxStreak: 0,
+        startTime: Date.now(),
+        wrongList: [],
+        type: type
+    };
+
+    showScreen('screen-quiz');
+    
+    // Timer
+    if (currentQuiz.timerInterval) clearInterval(currentQuiz.timerInterval);
+    currentQuiz.timerInterval = setInterval(updateTimer, 1000);
+    updateTimer();
+    
+    renderQuestion();
+}
+
+function updateTimer() {
+    const s = Math.floor((Date.now() - currentQuiz.startTime) / 1000);
+    const m = Math.floor(s / 60).toString().padStart(2, '0');
+    const sec = (s % 60).toString().padStart(2, '0');
+    document.getElementById('quiz-timer').innerText = `${m}:${sec}`;
+}
+
+function renderQuestion() {
+    const q = currentQuiz.questions[currentQuiz.currentIndex];
+    
+    document.getElementById('quiz-counter').innerText = `${currentQuiz.currentIndex + 1}/${currentQuiz.questions.length}`;
+    document.getElementById('quiz-progress-fill').style.width = ((currentQuiz.currentIndex / currentQuiz.questions.length) * 100) + '%';
+    document.getElementById('quiz-streak').innerText = `🔥 ${currentQuiz.streak}`;
+    
+    const isEnZh = state.mode === 'en-zh';
+    
+    document.getElementById('q-word').innerText = isEnZh ? q.word.en : q.word.zh;
+    document.getElementById('q-pos').innerText = q.word.pos;
+    
+    const optsContainer = document.getElementById('options-container');
+    optsContainer.innerHTML = '';
+    
+    q.options.forEach((opt, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'option-btn';
+        btn.innerText = isEnZh ? opt.zh : opt.en;
+        btn.onclick = () => handleAnswer(opt, btn, isEnZh);
+        optsContainer.appendChild(btn);
+    });
+}
+
+function handleAnswer(selected, btn, isEnZh) {
+    // Disable all buttons
+    const btns = document.querySelectorAll('.option-btn');
+    btns.forEach(b => b.disabled = true);
+    
+    const q = currentQuiz.questions[currentQuiz.currentIndex];
+    const isCorrect = selected.en === q.word.en;
+    
+    // Update mastery
+    updateMastery(q.word.en, isCorrect);
+    
+    if (isCorrect) {
+        btn.classList.add('correct');
+        btn.classList.add('anim-bounce');
+        currentQuiz.correct++;
+        currentQuiz.streak++;
+        if (currentQuiz.streak > currentQuiz.maxStreak) currentQuiz.maxStreak = currentQuiz.streak;
+        
+        // Update stats
+        state.stats.totalCorrect++;
+        if (currentQuiz.streak > state.stats.bestStreak) state.stats.bestStreak = currentQuiz.streak;
+        
+        // Daily goal
+        state.daily.todayCount++;
+        if (state.daily.todayCount === state.daily.dailyGoal && state.daily.streakDays === 0) {
+            state.daily.streakDays++;
+            state.daily.lastActiveDate = state.daily.todayDate;
+            alert("🎉 恭喜達成今日目標！");
+        } else if (state.daily.todayCount === state.daily.dailyGoal && state.daily.streakDays > 0) {
+             const yesterday = new Date();
+             yesterday.setDate(yesterday.getDate() - 1);
+             const yesterdayStr = yesterday.toISOString().split('T')[0];
+             if(state.daily.lastActiveDate === yesterdayStr) {
+                 state.daily.streakDays++;
+             } else if (state.daily.lastActiveDate !== state.daily.todayDate) {
+                 state.daily.streakDays = 1;
+             }
+             state.daily.lastActiveDate = state.daily.todayDate;
+        }
+
+        saveData();
+        
+        setTimeout(nextQuestion, 1000);
+    } else {
+        btn.classList.add('wrong');
+        document.getElementById('question-card').classList.add('anim-shake');
+        setTimeout(() => document.getElementById('question-card').classList.remove('anim-shake'), 400);
+        
+        // Find correct button and highlight
+        btns.forEach(b => {
+            if (b.innerText === (isEnZh ? q.word.zh : q.word.en)) {
+                b.classList.add('correct');
+            }
+        });
+        
+        currentQuiz.wrong++;
+        currentQuiz.streak = 0;
+        state.stats.totalWrong++;
+        
+        state.wrongAnswers[q.word.en] = (state.wrongAnswers[q.word.en] || 0) + 1;
+        currentQuiz.wrongList.push({
+            en: q.word.en, 
+            zh: q.word.zh,
+            pickedEn: selected.en,
+            pickedZh: selected.zh
+        });
+        
+        saveData();
+        
+        // Show overlay
+        const overlay = document.getElementById('feedback-overlay');
+        document.getElementById('fb-picked').innerText = isEnZh ? selected.zh : selected.en;
+        document.getElementById('fb-correct').innerText = isEnZh ? q.word.zh : q.word.en;
+        overlay.classList.add('show');
+        
+        setTimeout(() => {
+            overlay.classList.remove('show');
+            nextQuestion();
+        }, 2000); // Wait 2s for wrong answer
+    }
+}
+
+function nextQuestion() {
+    currentQuiz.currentIndex++;
+    if (currentQuiz.currentIndex >= currentQuiz.questions.length) {
+        endQuiz();
+    } else {
+        renderQuestion();
+    }
+}
+
+function abortQuiz() {
+    if(confirm("確定要放棄目前測驗嗎？")) {
+        endQuiz();
+    }
+}
+
+function endQuiz() {
+    clearInterval(currentQuiz.timerInterval);
+    state.stats.totalQuizzes++;
+    saveData();
+    
+    // Render Results
+    const acc = currentQuiz.currentIndex === 0 ? 0 : Math.round((currentQuiz.correct / currentQuiz.currentIndex) * 100);
+    document.getElementById('res-score').innerText = currentQuiz.correct * 10; // Simple score
+    document.getElementById('res-accuracy').innerText = acc + '%';
+    document.getElementById('res-time').innerText = document.getElementById('quiz-timer').innerText;
+    document.getElementById('res-streak').innerText = currentQuiz.maxStreak;
+    
+    const wrongListContainer = document.getElementById('res-wrong-list');
+    wrongListContainer.innerHTML = '';
+    document.getElementById('res-wrong-count').innerText = currentQuiz.wrongList.length;
+    
+    const isEnZh = state.mode === 'en-zh';
+    
+    if (currentQuiz.wrongList.length > 0) {
+        document.getElementById('btn-requiz-wrong').style.display = 'block';
+        currentQuiz.wrongList.forEach(w => {
+            const div = document.createElement('div');
+            div.className = 'list-item';
+            div.innerHTML = `
+                <h4>${w.en} <span style="font-size:14px;font-weight:normal;color:var(--text-muted)">${wordBank.find(x=>x.en===w.en).pos}</span></h4>
+                <p style="color:var(--danger)">❌ 你選的: ${isEnZh ? w.pickedZh : w.pickedEn}</p>
+                <p style="color:var(--success)">✅ 正確: ${isEnZh ? w.zh : w.en}</p>
+            `;
+            wrongListContainer.appendChild(div);
+        });
+    } else {
+        document.getElementById('btn-requiz-wrong').style.display = 'none';
+        wrongListContainer.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted);">🎉 太棒了！全部答對！</div>';
+    }
+    
+    showScreen('screen-result');
+}
+
+// ==========================================
+// 7. WRONG REVIEW & STATS
+// ==========================================
+function initWrong() {
+    const list = document.getElementById('all-wrong-list');
+    list.innerHTML = '';
+    
+    let wr = Object.keys(state.wrongAnswers)
+        .map(en => ({ en, count: state.wrongAnswers[en] }))
+        .filter(x => x.count > 0)
+        .sort((a, b) => b.count - a.count);
+        
+    document.getElementById('total-wrong-count').innerText = wr.length;
+    
+    if (wr.length === 0) {
+        list.innerHTML = '<div style="text-align:center; padding: 20px; color: var(--text-muted);">目前沒有錯題紀錄喔！</div>';
+        return;
+    }
+    
+    wr.forEach(item => {
+        const w = wordBank.find(x => x.en === item.en);
+        if (!w) return;
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        div.innerHTML = `
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h4>${w.en} <span style="font-size:14px;font-weight:normal;color:var(--text-muted)">${w.pos}</span></h4>
+                <span style="color:var(--danger);font-weight:bold;">錯誤: ${item.count}次</span>
+            </div>
+            <p>${w.zh}</p>
+        `;
+        list.appendChild(div);
+    });
+}
+
+function clearWrongAnswers() {
+    if (confirm("確定要清除所有錯題紀錄嗎？此動作無法復原。")) {
+        state.wrongAnswers = {};
+        saveData();
+        initWrong();
+    }
+}
+
+function initStats() {
+    document.getElementById('stat-total-quizzes').innerText = state.stats.totalQuizzes;
+    document.getElementById('stat-total-correct').innerText = state.stats.totalCorrect;
+    document.getElementById('stat-total-wrong').innerText = state.stats.totalWrong;
+    document.getElementById('stat-best-streak').innerText = state.stats.bestStreak;
+    
+    document.getElementById('input-daily-goal').value = state.daily.dailyGoal;
+}
+
+function saveDailyGoal() {
+    const val = parseInt(document.getElementById('input-daily-goal').value);
+    if (val > 0) {
+        state.daily.dailyGoal = val;
+        saveData();
+        alert("每日目標已更新！");
+    }
+}
+
+// Backup & Restore
+function exportData() {
+    const data = {
+        version: "1.0",
+        timestamp: new Date().toISOString(),
+        state: state
+    };
+    const blob = new Blob([JSON.stringify(data, null, 2)], {type: 'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `vocab_backup_${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+}
+
+function importData(event) {
+    const file = event.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        try {
+            const data = JSON.parse(e.target.result);
+            if (data.state) {
+                // Merge data to ensure all keys exist
+                state.wrongAnswers = data.state.wrongAnswers || [];
+                state.stats = { ...state.stats, ...(data.state.stats || {}) };
+                state.mastery = data.state.mastery || {};
+                state.daily = { ...state.daily, ...(data.state.daily || {}) };
+                
+                saveData();
+                alert("資料已成功匯入！");
+                showScreen('screen-home');
+            } else {
+                alert("檔案格式不正確！");
+            }
+        } catch (err) {
+            alert("讀取檔案失敗！");
+        }
+        // 清除 input 的值，這樣即使連續匯入同一個檔案也會觸發 onchange
+        event.target.value = '';
+    };
+    reader.readAsText(file);
+}
+
+// ==========================================
+// 8. INIT
+// ==========================================
+window.onload = () => {
+    loadData();
+    showScreen('screen-home');
+};
+</script>
+</body>
+</html>
