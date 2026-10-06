@@ -355,6 +355,64 @@
         .anim-bounce { animation: bounce 0.4s; }
 
         .hidden { display: none !important; }
+
+        /* Modal Styles */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            z-index: 9999;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.2s ease;
+        }
+        .modal-overlay.active {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .modal-card {
+            background: var(--card-bg);
+            color: var(--text-main);
+            border-radius: 20px;
+            padding: 24px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--border);
+            animation: modalPop 0.25s ease;
+        }
+        @keyframes modalPop {
+            from { transform: scale(0.92); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+        .header-actions {
+            position: absolute;
+            right: 0;
+            top: 0;
+            display: flex;
+            gap: 6px;
+            align-items: center;
+        }
+        .icon-btn {
+            background: none;
+            border: none;
+            font-size: 22px;
+            cursor: pointer;
+            padding: 4px;
+            border-radius: 8px;
+            transition: transform 0.15s;
+        }
+        .icon-btn:active {
+            transform: scale(0.9);
+        }
     </style>
 </head>
 <body>
@@ -364,7 +422,10 @@
     <div id="screen-home" class="screen active">
         <header>
             <h1>📚 英文單字王</h1>
-            <button class="theme-toggle" onclick="toggleTheme()" id="theme-btn">🌙</button>
+            <div class="header-actions">
+                <button class="icon-btn" onclick="openSyncModal('export')" id="sync-btn" title="跨裝置記憶同步代碼">📲</button>
+                <button class="icon-btn" onclick="toggleTheme()" id="theme-btn" title="切換深淺模式">🌙</button>
+            </div>
         </header>
 
         <div class="home-stats">
@@ -505,11 +566,22 @@
             </div>
 
             <div class="list-item">
-                <h4>資料備份 / 還原</h4>
+                <h4>🚀 記憶快速同步（推薦手機跨裝置）</h4>
+                <p style="font-size: 13px; color: var(--text-muted); margin: 6px 0 10px 0;">
+                    一鍵產生代碼傳到 LINE / 備忘錄，手機貼上即可無縫繼承！
+                </p>
+                <div style="display: flex; gap: 10px;">
+                    <button class="btn-primary" style="flex: 1; padding: 12px;" onclick="openSyncModal('export')">複製記憶代碼 📋</button>
+                    <button class="btn-secondary" style="flex: 1; padding: 12px;" onclick="openSyncModal('import')">貼上代碼繼承 📥</button>
+                </div>
+            </div>
+
+            <div class="list-item">
+                <h4>💾 傳統檔案備份 / 還原</h4>
                 <div style="display: flex; gap: 10px; margin-top: 10px;">
-                    <button class="btn-outline" style="flex: 1; padding: 10px;" onclick="exportData()">匯出資料 💾</button>
+                    <button class="btn-outline" style="flex: 1; padding: 10px;" onclick="exportData()">匯出 JSON 檔 💾</button>
                     <label class="btn-outline" style="flex: 1; padding: 10px; text-align: center; cursor: pointer;">
-                        匯入資料 📂
+                        匯入 JSON 檔 📂
                         <input type="file" id="import-file" accept=".json" style="display: none;" onchange="importData(event)">
                     </label>
                 </div>
@@ -517,6 +589,47 @@
         </div>
 
         <button class="btn-primary" style="width: 100%;" onclick="showScreen('screen-home')">回首頁</button>
+    </div>
+
+    <!-- Sync Modal (跨裝置記憶代碼同步視窗) -->
+    <div id="modal-sync" class="modal-overlay" onclick="closeSyncModal(event)">
+        <div class="modal-card" onclick="event.stopPropagation()">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+                <h3 style="margin: 0;">📲 跨裝置記憶同步</h3>
+                <button onclick="closeSyncModal()" style="background: none; border: none; font-size: 20px; cursor: pointer; color: var(--text-muted); padding: 0;">✖</button>
+            </div>
+
+            <div class="mode-toggle" style="margin-bottom: 15px;">
+                <div class="mode-tab active" id="modal-tab-export" onclick="switchSyncTab('export')">產生代碼 📋</div>
+                <div class="mode-tab" id="modal-tab-import" onclick="switchSyncTab('import')">輸入代碼 📥</div>
+            </div>
+
+            <!-- Export Tab -->
+            <div id="modal-content-export">
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
+                    點擊複製此代碼，傳到 LINE 或備忘錄。在手機上打開本網頁，點選「輸入代碼」貼上即可無縫繼承：
+                </p>
+                <textarea id="export-code-box" readonly style="width: 100%; height: 95px; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: rgba(0,0,0,0.03); color: var(--text-main); font-family: monospace; font-size: 12px; resize: none; margin-bottom: 12px; box-sizing: border-box;"></textarea>
+                <button class="btn-primary" id="btn-copy-code" style="width: 100%; padding: 12px; margin-bottom: 8px;" onclick="copyExportCode()">
+                    一鍵複製代碼 📋
+                </button>
+            </div>
+
+            <!-- Import Tab -->
+            <div id="modal-content-import" style="display: none;">
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 8px;">
+                    在下方貼上您從電腦複製的記憶代碼（支援 VOCAB- 代碼或 JSON 格式）：
+                </p>
+                <textarea id="import-code-box" placeholder="請在此貼上代碼..." style="width: 100%; height: 95px; padding: 10px; border-radius: 10px; border: 1px solid var(--border); background: rgba(0,0,0,0.03); color: var(--text-main); font-family: monospace; font-size: 12px; resize: none; margin-bottom: 12px; box-sizing: border-box;"></textarea>
+                <button class="btn-secondary" style="width: 100%; padding: 12px; margin-bottom: 8px;" onclick="applyImportCode()">
+                    立即繼承記憶 🚀
+                </button>
+            </div>
+
+            <button class="btn-outline" style="width: 100%; padding: 10px; font-size: 14px;" onclick="closeSyncModal()">
+                關閉
+            </button>
+        </div>
     </div>
 </div>
 
@@ -1877,6 +1990,133 @@ function saveDailyGoal() {
     }
 }
 
+// ==========================================
+// 8. MEMORY CODE & BACKUP / RESTORE
+// ==========================================
+function generateMemoryCode() {
+    const data = {
+        version: "1.0",
+        timestamp: new Date().toISOString(),
+        state: state
+    };
+    const jsonStr = JSON.stringify(data);
+    const utf8Bytes = new TextEncoder().encode(jsonStr);
+    let binary = '';
+    const len = utf8Bytes.byteLength;
+    for (let i = 0; i < len; i++) {
+        binary += String.fromCharCode(utf8Bytes[i]);
+    }
+    return 'VOCAB-' + btoa(binary);
+}
+
+function parseMemoryCode(rawText) {
+    let str = (rawText || '').trim();
+    if (!str) throw new Error("代碼不可為空！");
+    
+    if (str.startsWith('VOCAB-')) {
+        str = str.substring(6).trim();
+    }
+    
+    // 如果直接是 JSON 字串
+    if (str.startsWith('{')) {
+        return JSON.parse(str);
+    }
+    
+    // 嘗試 Base64 解碼
+    try {
+        const binary = atob(str);
+        const bytes = new Uint8Array(binary.length);
+        for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+        }
+        const jsonStr = new TextDecoder().decode(bytes);
+        return JSON.parse(jsonStr);
+    } catch (e) {
+        return JSON.parse(str);
+    }
+}
+
+function openSyncModal(initialTab = 'export') {
+    const modal = document.getElementById('modal-sync');
+    if (!modal) return;
+    modal.classList.add('active');
+    
+    // 自動更新代碼
+    const code = generateMemoryCode();
+    document.getElementById('export-code-box').value = code;
+    document.getElementById('btn-copy-code').innerText = '一鍵複製代碼 📋';
+    document.getElementById('import-code-box').value = '';
+    
+    switchSyncTab(initialTab);
+}
+
+function closeSyncModal(e) {
+    if (e && e.target !== document.getElementById('modal-sync')) return;
+    const modal = document.getElementById('modal-sync');
+    if (modal) modal.classList.remove('active');
+}
+
+function switchSyncTab(tab) {
+    const isExport = tab === 'export';
+    document.getElementById('modal-tab-export').classList.toggle('active', isExport);
+    document.getElementById('modal-tab-import').classList.toggle('active', !isExport);
+    document.getElementById('modal-content-export').style.display = isExport ? 'block' : 'none';
+    document.getElementById('modal-content-import').style.display = isExport ? 'none' : 'block';
+}
+
+function copyExportCode() {
+    const box = document.getElementById('export-code-box');
+    box.select();
+    box.setSelectionRange(0, 999999);
+    
+    const setSuccess = () => {
+        const btn = document.getElementById('btn-copy-code');
+        btn.innerText = '✅ 代碼已複製！可貼上傳到手機';
+        setTimeout(() => { btn.innerText = '一鍵複製代碼 📋'; }, 3500);
+    };
+
+    if (navigator.clipboard && navigator.clipboard.writeText) {
+        navigator.clipboard.writeText(box.value)
+            .then(setSuccess)
+            .catch(() => {
+                document.execCommand('copy');
+                setSuccess();
+            });
+    } else {
+        document.execCommand('copy');
+        setSuccess();
+    }
+}
+
+function applyImportCode() {
+    const text = document.getElementById('import-code-box').value;
+    try {
+        const data = parseMemoryCode(text);
+        if (data && data.state) {
+            state.wrongAnswers = data.state.wrongAnswers || {};
+            state.stats = { ...state.stats, ...(data.state.stats || {}) };
+            state.mastery = data.state.mastery || {};
+            state.daily = { ...state.daily, ...(data.state.daily || {}) };
+            saveData();
+            
+            const wrCount = Object.keys(state.wrongAnswers).filter(k => state.wrongAnswers[k] > 0).length;
+            const mCount = Object.keys(state.mastery).length;
+            
+            alert(`🎉 記憶繼承成功！\n\n已同步紀錄：\n• 錯題紀錄: ${wrCount} 題\n• 熟練度單字: ${mCount} 個\n• 歷史測驗次數: ${state.stats.totalQuizzes} 次\n• 學習連續天數: ${state.daily.streakDays} 天`);
+            
+            closeSyncModal();
+            initHome();
+            if (document.getElementById('screen-stats').classList.contains('active')) {
+                initStats();
+            }
+        } else {
+            alert('❌ 代碼內容格式不正確，找不到記憶狀態！');
+        }
+    } catch (err) {
+        alert('❌ 無法解析此代碼！請確認是否有完整複製。');
+    }
+}
+
 // Backup & Restore
 function exportData() {
     const data = {
@@ -1903,7 +2143,7 @@ function importData(event) {
             const data = JSON.parse(e.target.result);
             if (data.state) {
                 // Merge data to ensure all keys exist
-                state.wrongAnswers = data.state.wrongAnswers || [];
+                state.wrongAnswers = data.state.wrongAnswers || {};
                 state.stats = { ...state.stats, ...(data.state.stats || {}) };
                 state.mastery = data.state.mastery || {};
                 state.daily = { ...state.daily, ...(data.state.daily || {}) };
